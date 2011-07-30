@@ -1,0 +1,12 @@
+Build.PL
+Changes
+ignore.txt
+lib/C3000.pm
+MANIFEST			This list of files
+README
+t/00-load.t
+t/01-func.t
+t/boilerplate.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t

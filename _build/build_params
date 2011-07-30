@@ -1,0 +1,130 @@
+do{ my $x = [
+       {
+         'ARGV' => []
+       },
+       {},
+       {
+         'verbose' => undef,
+         'dist_suffix' => undef,
+         'PL_files' => undef,
+         'pollute' => undef,
+         'bindoc_dirs' => [
+                            'blib\\script'
+                          ],
+         'conflicts' => {},
+         'recommends' => {},
+         'scripts' => undef,
+         'pod_files' => undef,
+         'dist_version' => '0.01',
+         'config_dir' => '_build',
+         'sign' => undef,
+         'recurse_into' => [],
+         'build_bat' => 0,
+         'extra_linker_flags' => [],
+         'build_class' => 'Module::Build',
+         'prereq_action_types' => [
+                                    'requires',
+                                    'build_requires',
+                                    'conflicts',
+                                    'recommends'
+                                  ],
+         'base_dir' => 'C:/C3000',
+         'allow_mb_mismatch' => 0,
+         'xs_files' => undef,
+         'destdir' => undef,
+         'metafile' => 'META.yml',
+         'mb_version' => '0.3617',
+         'use_tap_harness' => 0,
+         'test_file_exts' => [
+                               '.t'
+                             ],
+         'dist_name' => 'C3000',
+         'has_config_data' => undef,
+         'install_base' => undef,
+         'module_name' => 'C3000',
+         'recursive_test_files' => undef,
+         'libdoc_dirs' => [
+                            'blib\\lib',
+                            'blib\\arch'
+                          ],
+         'perl' => 'C:\\strawberry\\perl\\bin\\perl.exe',
+         'dist_author' => [
+                            'Andy Xiao <xyf.xiao@gmail.com>'
+                          ],
+         'bundle_inc' => [],
+         'use_rcfile' => 1,
+         'configure_requires' => {},
+         'test_files' => undef,
+         'dist_abstract' => undef,
+         'create_readme' => undef,
+         'prefix_relpaths' => {},
+         'share_dir' => undef,
+         'debug' => undef,
+         'meta_merge' => {},
+         'get_options' => {},
+         'dist_version_from' => 'lib/C3000.pm',
+         '_added_to_INC' => [
+                              'C:\\strawberry\\perl\\site\\lib',
+                              'C:\\strawberry\\perl\\vendor\\lib',
+                              'C:\\strawberry\\perl\\lib',
+                              'c:\\Perl\\site\\lib',
+                              'C:\\perl\\lib',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\perl\\5.8.3\\lib\\MSWin32-x86',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\perl\\5.8.3\\lib/MSWin32-x86-multi-thread',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\perl\\5.8.3\\lib',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\perl\\site\\5.8.3',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\perl\\site\\5.8.3\\lib/MSWin32-x86-multi-thread',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\perl\\site\\5.8.3\\lib',
+                              'C:\\oracle\\product\\10.2.0\\db_1\\sysman\\admin\\scripts'
+                            ],
+         'auto_configure_requires' => 1,
+         'create_license' => undef,
+         'debugger' => undef,
+         'html_css' => '',
+         'cpan_client' => 'cpan',
+         'bundle_inc_preload' => [],
+         'build_elements' => [
+                               'PL',
+                               'support',
+                               'pm',
+                               'xs',
+                               'share_dir',
+                               'pod',
+                               'script'
+                             ],
+         'release_status' => 'stable',
+         'needs_compiler' => '',
+         'orig_dir' => 'C:/C3000',
+         'include_dirs' => [],
+         'installdirs' => 'site',
+         'mymetafile' => 'MYMETA.yml',
+         'create_makefile_pl' => 'traditional',
+         'magic_number' => undef,
+         'tap_harness_args' => {},
+         'install_sets' => {},
+         'install_base_relpaths' => {},
+         'create_packlist' => 1,
+         'meta_add' => {},
+         'requires' => {
+                         'perl' => '5.006'
+                       },
+         'install_path' => {},
+         'pm_files' => undef,
+         'quiet' => undef,
+         'script_files' => undef,
+         'extra_compiler_flags' => [],
+         'build_script' => 'Build',
+         'original_prefix' => {},
+         'c_source' => undef,
+         'program_name' => undef,
+         'autosplit' => undef,
+         'license' => 'perl',
+         'build_requires' => {
+                               'Test::More' => 0
+                             },
+         'config' => undef,
+         'blib' => 'blib',
+         'prefix' => undef
+       }
+     ];
+$x; }

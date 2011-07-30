@@ -1,0 +1,22 @@
+---
+abstract: ~
+author:
+  - 'Andy Xiao <xyf.xiao@gmail.com>'
+build_requires:
+  Test::More: 0
+dynamic_config: 0
+generated_by: 'Module::Build version 0.3617'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: C3000
+provides:
+  C3000:
+    file: lib/C3000.pm
+    version: 0.01
+requires:
+  perl: 5.006
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
