@@ -1,12 +1,14 @@
 package C3000;
-
+use warnings;
+use strict;
+use Readonly;
 use Win32::OLE;
 use Win32::OLE::Variant;
 use Carp;
 use Encode;
 use DateTime;
 use DateTime::Format::Natural;
-use constant DEBUG => 0;
+Readonly::Scalar my $DEBUG => 0;
 
 =head1 NAME
 
@@ -21,7 +23,7 @@ Version 0.01
 =cut
 
 our $VERSION = '0.01';
- 
+
 =head1 SYNOPSIS
  
    use C3000;
@@ -38,34 +40,49 @@ our $VERSION = '0.01';
 init sub
 
 =cut
+
 my $Empty;
+
 sub new {
-	my $this = shift;
-	my $container_manager = Win32::OLE->new('Athena.CT.ContainerManager.1');
-	my $active_element_manager = Win32::OLE->new('Athena.CT.ActiveElementManager.1');
-	my $active_element_template_manager = Win32::OLE->new('Athena.CT.ActiveElementTemplateManager.1');
-	my $security_token = Win32::OLE->new('AthenaSecurity.UserSessions.1');
-        	$security_token->ConvergeLogin('Administrator', 'Athena', 0, 666);
-	my $adas_instance_manager = Win32::OLE->new('Athena.AS.ADASInstanceManager.1') or die;
-	my $adas_template_manager = Win32::OLE->new('Athena.AS.AdasTemplateManager.1') or die;
-	my $container_template_manager = Win32::OLE->new('Athena.CT.ContainerTemplateManager.1') or die;
-	my $data_segment_helper = Win32::OLE->new('AthenaSecurity.DataSegment.1') or die;
-	my $meter_data_interface = Win32::OLE->new('DeviceAndMeterdata.ADASDeviceAndMeterdata.1');
+    my $this              = shift;
 
 
+    #init start
+    my $container_manager = Win32::OLE->new('Athena.CT.ContainerManager.1');
+    my $active_element_manager =
+      Win32::OLE->new('Athena.CT.ActiveElementManager.1');
+    my $active_element_template_manager =
+      Win32::OLE->new('Athena.CT.ActiveElementTemplateManager.1');
+    my $security_token = Win32::OLE->new('AthenaSecurity.UserSessions.1');
+    $security_token->ConvergeLogin( 'Administrator', 'Athena', 0, 666 );
+    my $adas_instance_manager =
+      Win32::OLE->new('Athena.AS.ADASInstanceManager.1')
+      or croak;
+    my $adas_template_manager =
+      Win32::OLE->new('Athena.AS.AdasTemplateManager.1')
+      or croak;
+    my $container_template_manager =
+      Win32::OLE->new('Athena.CT.ContainerTemplateManager.1')
+      or croak;
+    my $data_segment_helper = Win32::OLE->new('AthenaSecurity.DataSegment.1')
+      or croak;
+    my $meter_data_interface =
+      Win32::OLE->new('DeviceAndMeterdata.ADASDeviceAndMeterdata.1');
+      #init end
+    
 
-	my $self = { 
-			MeterDataInterface 	   	=> 	 $meter_data_interface,
-			ContainerManager           	=>	 $container_manager,
-			ContainerTemplateManager	=>	 $container_template_manager,
-			ActiveElementManager       	=>	 $active_element_manager,
-			ActiveElementTemplateManager  	=>	 $active_element_template_manager,
-		        UserSessions			=>	 $security_token,
-			ADASInstanceManager		=> 	 $adas_instance_manager,
-			ADASTemplateManager		=>	 $adas_template_manager,
-			DataSegment			=> 	 $data_segment_helper,			
-			};
-	return bless $self, $this;
+    my $self = {
+        MeterDataInterface           => $meter_data_interface,
+        ContainerManager             => $container_manager,
+        ContainerTemplateManager     => $container_template_manager,
+        ActiveElementManager         => $active_element_manager,
+        ActiveElementTemplateManager => $active_element_template_manager,
+        UserSessions                 => $security_token,
+        ADASInstanceManager          => $adas_instance_manager,
+        ADASTemplateManager          => $adas_template_manager,
+        DataSegment                  => $data_segment_helper,
+    };
+    return bless $self, $this;
 
 }
 
@@ -85,11 +102,15 @@ low function, just ignore it.
 
 
 =cut
-sub get_LP{
-	my $self = shift;
-	my ($return_fields, $criteria) = @_;
-	my $rs = $self->{'MeterDataInterface'}->GetLoadProfile($return_fields, $criteria, 0) or die $hl->{'MeterDataInterface'}->LastError();
-	return $rs;	
+
+sub get_LP {
+    my $self = shift;
+    my ( $return_fields, $criteria ) = @_;
+    my $rs =
+      $self->{'MeterDataInterface'}
+      ->GetLoadProfile( $return_fields, $criteria, 0 )
+      or croak $self->{'MeterDataInterface'}->LastError();
+    return $rs;
 }
 
 =head2 accu_LP
@@ -103,31 +124,56 @@ sub get_LP{
 
 
 =cut
-sub accu_LP{
-	my $self = shift;
-	my ($LP_return_fields, $device, $var, $date_from, $date_to) = @_;
-	$LP_return_fields = [ $LP_return_fields, 'ADAS_TIME_GMT' ];
-	$date_from = $self->convert_VT_DATE($date_from);
-	$date_to   = $self->convert_VT_DATE($date_to);
-	my $device_return_fields = ['ADAS_DEVICE', 'ADAS_VARIABLE', 'ADAS_DEVICE_NAME','ADAS_VARIABLE_NAME'];
-	my $device_criteria = [['ADAS_DEVICE_NAME',  $device], ['ADAS_VARIABLE_NAME', $var]];
-	my $rs_device = $self->search_device($device_return_fields, $device_criteria);  #record set of device;
-	my $value = 0;
 
-	while(!$rs_device->EOF){
-		my $device_id = $rs_device->Fields('ADAS_DEVICE')->{Value};
-     		my $var_id = $rs_device->Fields('ADAS_VARIABLE')->{Value};
-		my $LP_criteria =  [['ADAS_DEVICE', $device_id], ['ADAS_VARIABLE', $var_id], ['ADAS_TIME_GMT', $date_from, '>'], ['ADAS_TIME_GMT', $date_to, '<=']];
-	my $rs = $self->{'MeterDataInterface'}->GetLoadProfile($LP_return_fields, $LP_criteria, 0) or die $hl->{'MeterDataInterface'}->LastError();
-	while(!$rs->EOF){
-		$value += $rs->Fields($LP_return_fields->[0])->{Value};
+sub accu_LP {
+    my $self = shift;
+    my ( $LP_return_fields, $device, $var, $date_from, $date_to ) = @_;
 
-		warn $rs->Fields($LP_return_fields->[1])->{Value} . "meter value is" . $value  if DEBUG == 1;	
-		$rs->MoveNext();
-	}
-	$rs_device->MoveNext();
-}
-	return $value;
+     
+    
+
+    #get device
+    my $device_return_fields = [
+        'ADAS_DEVICE',      'ADAS_VARIABLE',
+        'ADAS_DEVICE_NAME', 'ADAS_VARIABLE_NAME'
+    ];
+    my $device_criteria =
+      [ [ 'ADAS_DEVICE_NAME', $device ], [ 'ADAS_VARIABLE_NAME', $var ] ];
+    my $rs_device =
+      $self->search_device( $device_return_fields, $device_criteria );
+
+
+
+    $LP_return_fields = [ $LP_return_fields, 'ADAS_TIME_GMT' ];
+    $date_from        = $self->convert_VT_DATE($date_from);
+    $date_to          = $self->convert_VT_DATE($date_to);
+    my $value = 0;
+
+    while ( !$rs_device->EOF ) {
+        my $device_id   = $rs_device->Fields('ADAS_DEVICE')->{Value};
+        my $var_id      = $rs_device->Fields('ADAS_VARIABLE')->{Value};
+        my $LP_criteria = [
+            [ 'ADAS_DEVICE',   $device_id ],
+            [ 'ADAS_VARIABLE', $var_id ],
+            [ 'ADAS_TIME_GMT', $date_from, '>' ],
+            [ 'ADAS_TIME_GMT', $date_to,   '<=' ]
+        ];
+        my $rs =
+          $self->{'MeterDataInterface'}
+          ->GetLoadProfile( $LP_return_fields, $LP_criteria, 0 )
+          or croak $self->{'MeterDataInterface'}->LastError();
+        while ( !$rs->EOF ) {
+            $value += $rs->Fields( $LP_return_fields->[0] )->{Value};
+
+            carp $rs->Fields( $LP_return_fields->[1] )->{Value}
+              . "meter value is"
+              . $value
+              if $DEBUG == 1;
+            $rs->MoveNext();
+        }
+        $rs_device->MoveNext();
+    }
+    return $value;
 }
 
 =head2 get_single_LP
@@ -142,41 +188,60 @@ sub accu_LP{
 as above, get_single_LP function return a value  or a hash when value is more than one.
 
 =cut
-sub get_single_LP{
-	my $self = shift;
-	my ($LP_return_fields, $device, $var, $date) = @_;
-	    $LP_return_fields = [ $LP_return_fields ];
-	my $parser = DateTime::Format::Natural->new(
-	    			lang          => 'en',
-	    			format     => 'yyyy/mm/dd',
-	    			time_zone  => 'Asia/Taipei',
-			);
+
+sub get_single_LP {
+    my $self = shift;
+    my ( $LP_return_fields, $device, $var, $date ) = @_;
+    $LP_return_fields = [$LP_return_fields];
+    my $parser = DateTime::Format::Natural->new(
+        lang      => 'en',
+        format    => 'yyyy/mm/dd',
+        time_zone => 'Asia/Taipei',
+    );
     my $dt = $parser->parse_datetime($date);
-       $dt->subtract(minutes => 1);
-        $dt->set_time_zone( 'UTC' );
-      my  $date_from = Variant(VT_DATE, 25569+$dt->epoch/86400); 
-	my $date_to   = $self->convert_VT_DATE($date);
-	my $device_return_fields = ['ADAS_DEVICE', 'ADAS_VARIABLE', 'ADAS_DEVICE_NAME','ADAS_VARIABLE_NAME'];
-	my $device_criteria = [['ADAS_DEVICE_NAME',  $device], ['ADAS_VARIABLE_NAME', $var]];
-	my $rs_device = $self->search_device($device_return_fields, $device_criteria);  #record set of device;
-	my $LP_values ={};
+    $dt->subtract( minutes => 1 );
+    $dt->set_time_zone('UTC');
+    my $date_from            = Variant( VT_DATE, 25569 + $dt->epoch / 86400 );
+    my $date_to              = $self->convert_VT_DATE($date);
+    my $device_return_fields = [
+        'ADAS_DEVICE',      'ADAS_VARIABLE',
+        'ADAS_DEVICE_NAME', 'ADAS_VARIABLE_NAME'
+    ];
+    my $device_criteria =
+      [ [ 'ADAS_DEVICE_NAME', $device ], [ 'ADAS_VARIABLE_NAME', $var ] ];
+    my $rs_device =
+      $self->search_device( $device_return_fields, $device_criteria )
+      ;    #record set of device;
+    my %LP_values ;
+    my $LP_key;
+    while ( !$rs_device->EOF ) {
+        my $device_id   = $rs_device->Fields('ADAS_DEVICE')->{Value};
+        my $var_id      = $rs_device->Fields('ADAS_VARIABLE')->{Value};
+        my $LP_criteria = [
+            [ 'ADAS_DEVICE',   $device_id ],
+            [ 'ADAS_VARIABLE', $var_id ],
+            [ 'ADAS_TIME_GMT', $date_from, '>' ],
+            [ 'ADAS_TIME_GMT', $date_to,   '<=' ]
+        ];
+        my $rs =
+          $self->{'MeterDataInterface'}
+          ->GetLoadProfile( $LP_return_fields, $LP_criteria, 0 )
+          or croak $self->{'MeterDataInterface'}->LastError();
+        while ( !$rs->EOF ) {
+             $LP_key =
+                $rs_device->Fields('ADAS_DEVICE_NAME') . "_"
+              . $rs_device->Fields('ADAS_VARIABLE_NAME');
+            $LP_values{$LP_key} =
+              $rs->Fields( $LP_return_fields->[0] )->{Value};
+            $rs->MoveNext();
+        }
+        $rs_device->MoveNext();
+    }
 
-	while(!$rs_device->EOF){
-		my $device_id = $rs_device->Fields('ADAS_DEVICE')->{Value};
-     		my $var_id = $rs_device->Fields('ADAS_VARIABLE')->{Value};
-		my $LP_criteria =  [['ADAS_DEVICE', $device_id], ['ADAS_VARIABLE', $var_id], ['ADAS_TIME_GMT', $date_from, '>'], ['ADAS_TIME_GMT', $date_to, '<=']];
-	my $rs = $self->{'MeterDataInterface'}->GetLoadProfile($LP_return_fields, $LP_criteria, 0) or die $hl->{'MeterDataInterface'}->LastError();
-	while(!$rs->EOF){
-		my $name = $rs_device->Fields('ADAS_DEVICE_NAME') . "_" . $rs_device->Fields('ADAS_VARIABLE_NAME');
-		$LP_values->{$name} = $rs->Fields($LP_return_fields->[0])->{Value}; 	
-		$rs->MoveNext();
-	}
-	$rs_device->MoveNext();
-}
-  return values(%LP_values) if keys(%LP_values) <=1;
-  return \%LP_values;
+    return keys %LP_values <= 1 ? $LP_values{ $LP_key }   :  \%LP_values;
 
 }
+
 =head2 search_device
 
 		return a recordset of device info fitting criteria 
@@ -186,17 +251,16 @@ sub get_single_LP{
 
 =cut
 
-sub search_device{
+sub search_device {
     my $self = shift;
-    my ($return_fields, $criteria) = @_;
-    my $rs   = $self->{'MeterDataInterface'}->FindVariable($return_fields, $criteria, $Empty, 0) or die $self->{'MeterDataInterface'}->LastError();
+    my ( $return_fields, $criteria ) = @_;
+    my $rs =
+      $self->{'MeterDataInterface'}
+      ->FindVariable( $return_fields, $criteria, $Empty, 0 )
+      or croak $self->{'MeterDataInterface'}->LastError();
 
     return $rs;
 }
-
-
-
-
 
 =head2  convert_VT_DATE 
 
@@ -206,18 +270,18 @@ C3000 utils, pass to a DateTime obj and return a VT_DATE variable.
 =cut
 
 sub convert_VT_DATE {
-	shift;
-use constant EPOCH       => 25569;
-use constant SEC_PER_DAY => 86400;
+    shift;
+    Readonly::Scalar my $EPOCH       => 25569;
+    Readonly::Scalar my $SEC_PER_DAY => 86400;
     my $parser = DateTime::Format::Natural->new(
-	    			lang          => 'en',
-	    			format     => 'yyyy/mm/dd',
-	    			time_zone  => 'Asia/Taipei',
-			);
+        lang      => 'en',
+        format    => 'yyyy/mm/dd',
+        time_zone => 'Asia/Taipei',
+    );
     my $date_string = shift;
-    my $dt = $parser->parse_datetime($date_string);
-    $dt->set_time_zone( 'UTC' );
-    return Variant(VT_DATE, EPOCH+$dt->epoch/SEC_PER_DAY); 
+    my $dt          = $parser->parse_datetime($date_string);
+    $dt->set_time_zone('UTC');
+    return Variant( VT_DATE, $EPOCH + $dt->epoch / $SEC_PER_DAY );
 }
 
 =head1 AUTHOR
@@ -284,4 +348,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of C3000
+1;    # End of C3000
