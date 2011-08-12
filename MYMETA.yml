@@ -1,5 +1,5 @@
 ---
-abstract: ~
+abstract: "A perl wrap for C3000 API\n\tThis is a simple wrap of C3000 API. For more details, please refer to: \n\tmeter2cash CONVERGE Business Objects Component Interfaces User Guide"
 author:
   - 'Andy Xiao <xyf.xiao@gmail.com>'
 build_requires:
